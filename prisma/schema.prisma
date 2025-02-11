@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model Country {
+  countryId  Int     @id @default(autoincrement())
+  countryName String
+  offices Office[]
+}
+
+model Role {
+  roleId Int @id @default(autoincrement())
+  role   String @unique
+  logins Login[]
+}
+
+model IdeaCategory {
+  catId   Int @id @default(autoincrement())
+  catName String
+  ideas   Idea[]
+}
+
+model Office {
+  officeId   Int     @id @default(autoincrement())
+  name       String
+  location   String  
+  countryId  Int
+  country    Country @relation(fields: [countryId], references: [countryId])
+  managerId  Int   
+  projects   ContributeProject[]
+  createdAt  DateTime @default(now())
+  assignedStaff AssignStaff[]
+}
+
+model Member {
+  memberId  Int     @id @default(autoincrement())
+  email     String  @unique
+  firstName String
+  lastName  String
+  officeId  Int  
+  ideas     Idea[]
+  comments  Comment[]
+  assigned  AssignStaff[]
+  votes     Vote[]
+  createdAt DateTime @default(now())
+}
+
+model Login {
+  loginId  Int  @id @default(autoincrement())
+  email    String @unique
+  password String 
+  roleId   Int
+  role     Role  @relation(fields: [roleId], references: [roleId])
+}
+
+model Idea {
+  ideaId       Int     @id @default(autoincrement())
+  title        String
+  description  String  
+  catId        Int
+  ideaCategory IdeaCategory @relation(fields: [catId], references: [catId])
+  status       String
+  createdAt    DateTime @default(now())   
+  memberId     Int
+  member       Member @relation(fields: [memberId], references: [memberId])
+  existUrl     String
+  votes        Vote[]
+  comments     Comment[]
+  projects     Project[]
+}
+
+model Vote {
+  voteId    Int     @id @default(autoincrement())  
+  ideaId    Int
+  idea      Idea    @relation(fields: [ideaId], references: [ideaId])
+  memberId     Int
+  member       Member @relation(fields: [memberId], references: [memberId])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  commentId Int     @id @default(autoincrement())
+  comment   String  
+  ideaId    Int
+  idea      Idea    @relation(fields: [ideaId], references: [ideaId])
+  replyId   Int?
+  createdAt DateTime @default(now())
+  memberId       Int
+  member         Member  @relation(fields: [memberId], references: [memberId])
+}
+
+model Project {
+  projectId   Int  @id @default(autoincrement())
+  projectName String  
+  ideaId      Int
+  idea        Idea @relation(fields: [ideaId], references: [ideaId])
+  contributeProjects ContributeProject[]
+  createdAt   DateTime @default(now())
+}
+
+model ContributeProject {
+  contributeId  Int @id @default(autoincrement())  
+  projectId     Int
+  project       Project @relation(fields: [projectId], references: [projectId])
+  officeId      Int
+  office        Office  @relation(fields: [officeId], references: [officeId])
+  assignedStaff AssignStaff[]
+  steps         ProjectStep[]
+  createdAt     DateTime @default(now())
+}
+
+model AssignStaff {
+  assignId       Int @id @default(autoincrement())  
+  contributeId   Int
+  contributeProject ContributeProject @relation(fields: [contributeId], references: [contributeId])
+  officeId       Int
+  office         Office  @relation(fields: [officeId], references: [officeId])
+  memberId       Int
+  member         Member  @relation(fields: [memberId], references: [memberId])
+}
+
+model ProjectStep {
+  stepId         Int @id @default(autoincrement())
+  title          String  
+  contributeId   Int
+  contributeProject ContributeProject @relation(fields: [contributeId], references: [contributeId])
+  reportUrl      String
+  comment        String
+}
